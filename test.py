@@ -8,4 +8,4 @@ test_fld = '/Users/federicoclaudi/Dropbox (UCL - SWC)/Rotation_vte/Anatomy/testb
 ch = 'downsampled_channel_1.nii'
 datapath = os.path.join(test_fld, ch)
 
-extract(datapath, render=True)
+extract(datapath, render=True, debug=False)
