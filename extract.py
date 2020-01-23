@@ -2,6 +2,7 @@ import os
 import numpy as np 
 import argparse
 from skimage.filters import gaussian as gaussian_filter
+from skimage.filters import try_all_threshold
 from skimage import measure 
 from brainio import brainio
 
@@ -33,7 +34,7 @@ def marching_cubes_to_obj(marching_cubes_out, output_file):
 def analyze(marching_cubes_out):
     verts, faces, normals, _ = marching_cubes_out
     res = measure.mesh_surface_area(verts, faces)
-    a = 1
+    # WIP
 
 
 
@@ -72,12 +73,15 @@ def extract(datapath, objpath=False, voxel_size=1.0, render=False,
 
         # Gaussian filter 
         datashape = data.shape
-        # kernel_shape = [np.sqrt(datashape[0]).astype(np.int8), np.sqrt(datashape[1]).astype(np.int8), 5]
         kernel_shape = [gaussian_kernel, gaussian_kernel, 2]
         filtered = gaussian_filter(data, kernel_shape)
         print("     filtering completed. Thresholding")
 
         # treshold and binarize
+        # try_all_threshold(filtered[:, :, 900])
+        # import matplotlib.pyplot as plt
+        # plt.show()
+
         thresh = np.percentile(filtered.ravel(), threshold)
         binary = filtered > thresh
 
