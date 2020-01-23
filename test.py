@@ -9,7 +9,7 @@ import sys
 if sys.platform == "darwin":
     test_fld = '/Users/federicoclaudi/Dropbox (UCL - SWC)/Rotation_vte/Anatomy/testbrain'
 else:
-    test_fld = 'Z:\\swc\\branco\\BrainSaw\\CC_134_1\\cellfinder\\registration'
+    test_fld = 'Z:\\swc\\branco\\BrainSaw\\CC_134_2\\cellfinder\\registration'
 ch = 'downsampled_channel_1.nii'
 datapath = os.path.join(test_fld, ch)
 

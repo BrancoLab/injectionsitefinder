@@ -9,7 +9,7 @@ from brainio import brainio
 
 from visualize import visualize_obj
 from registration import get_registered_image
-from analyse import analyse
+from analyse import analyse, get_largest_component
 
 def reorient_image(image, invert_axes=None, orientation="saggital"):
     """
@@ -122,6 +122,9 @@ def extract(datapath, control_point_filepath, objpath=False, voxel_size=10.0,
         print("     Saving as .obj")
         faces = faces + 1
         marching_cubes_to_obj((verts, faces, normals, values), objpath)
+
+        # Keep only the largest connected component
+        get_largest_component(objpath)
 
     # Analyze
     props = analyse(objpath)

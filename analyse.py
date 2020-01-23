@@ -1,4 +1,5 @@
-from vtkplotter import load
+from vtkplotter import load, save
+from vtkplotter.analysis import extractLargestRegion
 
 def get_center_of_mass(actor):
     return actor.centerOfMass()
@@ -14,3 +15,8 @@ def analyse(obj_filepath):
     props['volume'] = get_volume(actor)
 
     return props
+
+def get_largest_component(obj_filepath):
+    actor = load(obj_filepath)
+    actor =  extractLargestRegion(actor)
+    save(actor, obj_filepath)

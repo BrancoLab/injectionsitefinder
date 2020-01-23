@@ -50,7 +50,7 @@ def get_registered_image(nii_path, registration_dir):
         else:
             run = False
     else:
-        run = False
+        run = True
     
     if run:
         destination_image = os.path.join(registration_dir, default_atlas_name)
