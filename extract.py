@@ -62,8 +62,8 @@ def analyze(marching_cubes_out):
     # WIP
 
 
-def extract(datapath, control_point_filepath, objpath=False, voxel_size=10.0, 
-                render=False, invert_axes=(2), orientation="saggital",
+def extract(datapath, regfld, objpath=False, voxel_size=10.0, 
+                render=False, 
                 gaussian_kernel=2,
                 threshold=99.99,
                 debug=False):
@@ -76,6 +76,7 @@ def extract(datapath, control_point_filepath, objpath=False, voxel_size=10.0,
         The extracted injection site 3d shape is saved as a .obj file
 
         :param datapath: str with path to a downsampled.nii file
+        :param regfld: str, path to cellfinder/registration
         :param objpath: str {optional}. Destination path to save the .obj file
         :param voxel_size: float {optional, 1}.
         :param render: bool, default False. If true brainrender is used to render the injection site
@@ -92,7 +93,7 @@ def extract(datapath, control_point_filepath, objpath=False, voxel_size=10.0,
         print("Output file {} already exists. Skipping injection site extraction".format(objpath))
     else:
         # Load downsampled data registered to the atlas
-        data = get_registered_image(datapath, control_point_filepath)
+        data = get_registered_image(datapath, regfld)
         data = reorient_image(data, invert_axes=[2,], orientation='coronal')
         print("Ready to extract injection site from: " + datapath)
         print("     Starting gaussian filtering")
@@ -146,9 +147,9 @@ def get_parser():
     )
 
     parser.add_argument(
-        dest="control_point_filepath",
+        dest="regfld",
         type=str,
-        help="Path to control point file",
+        help="Path to cellfinder registration folder",
     )
 
     parser.add_argument(
@@ -191,6 +192,7 @@ def main():
     args = get_parser().parse_args()
     extract(
         args.datapath,
+        args.regfld,
         objpath=args.objpath,
         render=args.render,
         gaussian_kernel=args.gaussian_kernel,
