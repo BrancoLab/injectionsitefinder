@@ -5,6 +5,8 @@ from skimage.filters import gaussian as gaussian_filter
 from skimage.filters import try_all_threshold
 from skimage import measure 
 
+from brainio import brainio
+
 from visualize import visualize_obj
 from registration import get_registered_image
 
@@ -81,6 +83,7 @@ def extract(datapath, control_point_filepath, objpath=False, voxel_size=10.0,
         :param threshold: float, range [0, 100] percentile to use for the treshold
         :param debug: bool, is true functionality useful for debugging is enabled.
     """
+
     # Check if output file exists
     if not objpath: 
         objpath = datapath.split(".")[0]+".obj"
@@ -90,7 +93,7 @@ def extract(datapath, control_point_filepath, objpath=False, voxel_size=10.0,
     else:
         # Load downsampled data registered to the atlas
         data = get_registered_image(datapath, control_point_filepath)
-        data = reorient_image(data, invert_axes=[0,], orientation=orientation)
+        data = reorient_image(data, invert_axes=[2,], orientation='coronal')
         print("Ready to extract injection site from: " + datapath)
         print("     Starting gaussian filtering")
 
@@ -99,18 +102,17 @@ def extract(datapath, control_point_filepath, objpath=False, voxel_size=10.0,
         filtered = gaussian_filter(data, kernel_shape)
         print("     Filtering completed. Thresholding")
 
-        # treshold and binarize
-        # try_all_threshold(filtered[:, :, 900])
-        # import matplotlib.pyplot as plt
-        # plt.show()
-
         thresh = np.percentile(filtered.ravel(), threshold)
         binary = filtered > thresh
+
+        if debug:
+            brainio.to_nii(binary.astype(np.int16), os.path.join(os.path.split(datapath)[0], "tresholded.nii"))
 
         # apply marching cubes 
         print("     Extracting surface from tresholded image")
         verts, faces, normals, values = \
             measure.marching_cubes_lewiner(binary, 0, step_size=1)
+
 
         # Scale to atlas spacing
         if voxel_size is not 1:
@@ -121,6 +123,7 @@ def extract(datapath, control_point_filepath, objpath=False, voxel_size=10.0,
         # TODO make function to extract centroid and volume of mesh
 
         # Save image to .obj
+        print("     Saving as .obj")
         faces = faces + 1
         marching_cubes_to_obj((verts, faces, normals, values), objpath)
 

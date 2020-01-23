@@ -16,7 +16,7 @@ SOURCE_IMAGE_NAME = "downsampled.nii"
 DEFAULT_CONTROL_POINT_FILE = "inverse_control_point_file.nii"
 DEFAULT_OUTPUT_FILE_NAME = "roi_transformed.nii"
 DEFAULT_TEMP_FILE_NAME = "ROI_TMP.nii"
-default_atlas_name = "registered_atlas.nii"
+default_atlas_name = "brain_filtered.nii"
 
 # TODO this should be integrated in celllfinder ?
 def prepare_segmentation_cmd(

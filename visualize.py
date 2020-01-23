@@ -43,13 +43,15 @@ def visualize_nii_slices(data, mx=1000):
         ax.imshow(np.rot90(data[:, ::-1, idx]), vmin=0, vmax=mx, cmap='gray')
     plt.show()
 
-def visualize_obj(obj_path, *args, color='salmon', **kwargs):
+
+def visualize_obj(obj_path, *args, color='lightcoral', **kwargs):
     """
         Uses brainrender to visualize a .obj file registered to the Allen CCF
 
         :param obj_path: str, path to a .obj file
         :param color: str, color of object being rendered
     """
+    print("Visualizing : " + obj_path)
     scene = Scene(add_root=True)
     scene.add_from_file(obj_path, *args,
         c=color, **kwargs)

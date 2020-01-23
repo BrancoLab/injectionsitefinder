@@ -13,11 +13,12 @@ else:
 ch = 'downsampled_channel_1.nii'
 datapath = os.path.join(test_fld, ch)
 
-scene = extract(datapath, test_fld, render=True, debug=True, threshold=50.0)
+scene = extract(datapath, test_fld, render=True, debug=True, threshold=99.9)
 scene.add_brain_regions(['SCm'], use_original_color=True, wireframe=1)
 scene.render()
 
 
-# visualize_nii(r'Z:\swc\branco\BrainSaw\CC_134_1\cellfinder\registration\transformed.nii',
-#         other_imgs=[r'Z:\swc\branco\BrainSaw\CC_134_1\cellfinder\registration\downsampled_channel_1.nii'])
+# visualize_nii(r'Z:\swc\branco\BrainSaw\CC_134_1\cellfinder\registration\tresholded.nii',
+#         other_imgs=[r'Z:\swc\branco\BrainSaw\CC_134_1\cellfinder\registration\boundaries.nii',
+#                     r'Z:\swc\branco\BrainSaw\CC_134_1\cellfinder\registration\downsampled_channel_1.nii'])
 
