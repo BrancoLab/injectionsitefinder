@@ -18,5 +18,5 @@ def analyse(obj_filepath):
 
 def get_largest_component(obj_filepath):
     actor = load(obj_filepath)
-    actor =  extractLargestRegion(actor)
+    actor =  extractLargestRegion(actor).flipNormals()
     save(actor, obj_filepath)
