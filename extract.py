@@ -2,14 +2,14 @@ import os
 import numpy as np 
 import argparse
 from skimage.filters import gaussian as gaussian_filter
-from skimage.filters import try_all_threshold
+from skimage.filters import threshold_otsu
 from skimage import measure 
 
 from brainio import brainio
 
 from visualize import visualize_obj
 from registration import get_registered_image
-
+from analyse import analyse
 
 def reorient_image(image, invert_axes=None, orientation="saggital"):
     """
@@ -102,7 +102,8 @@ def extract(datapath, control_point_filepath, objpath=False, voxel_size=10.0,
         filtered = gaussian_filter(data, kernel_shape)
         print("     Filtering completed. Thresholding")
 
-        thresh = np.percentile(filtered.ravel(), threshold)
+        # thresh = np.percentile(filtered.ravel(), threshold)
+        thresh = threshold_otsu(filtered)
         binary = filtered > thresh
 
         if debug:
@@ -113,19 +114,18 @@ def extract(datapath, control_point_filepath, objpath=False, voxel_size=10.0,
         verts, faces, normals, values = \
             measure.marching_cubes_lewiner(binary, 0, step_size=1)
 
-
         # Scale to atlas spacing
         if voxel_size is not 1:
             verts = verts * voxel_size
-
-        # Analyze
-        # analyze((verts, faces, normals, values))
-        # TODO make function to extract centroid and volume of mesh
 
         # Save image to .obj
         print("     Saving as .obj")
         faces = faces + 1
         marching_cubes_to_obj((verts, faces, normals, values), objpath)
+
+    # Analyze
+    props = analyse(objpath)
+    print(props)
 
     # Visualize
     if render:
