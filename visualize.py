@@ -4,7 +4,7 @@ from brainio import brainio
 from brainrender.scene import Scene
 import matplotlib.pyplot as plt
 
-def visialize_nii(nii_path):
+def visualize_nii(nii_path, other_imgs=[]):
     """
         Uses napari to visualize 3d data from a .nii file
 
@@ -13,7 +13,6 @@ def visialize_nii(nii_path):
     with napari.gui_qt():
         v = napari.Viewer(title="viewer")
 
-        image_scales = (1, 1, 1)
         image = brainio.load_any(nii_path)
         image = np.swapaxes(image, 2, 0)
 
@@ -22,7 +21,15 @@ def visialize_nii(nii_path):
             name="Data",
         )
 
-def visialize_nii_slices(data, mx=1000):
+        for img in other_imgs:
+            image = brainio.load_any(img)
+            image = np.swapaxes(image, 2, 0)
+
+            v.add_image(
+                image,
+            )       
+
+def visualize_nii_slices(data, mx=1000):
     """
         Plots a bunch of slices from a .nii file to visualize them
 
@@ -43,7 +50,7 @@ def visualize_obj(obj_path, *args, color='salmon', **kwargs):
         :param obj_path: str, path to a .obj file
         :param color: str, color of object being rendered
     """
-    scene = Scene(add_root=False)
+    scene = Scene(add_root=True)
     scene.add_from_file(obj_path, *args,
         c=color, **kwargs)
-    scene.render()
+    return scene

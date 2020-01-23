@@ -4,12 +4,35 @@ import argparse
 from skimage.filters import gaussian as gaussian_filter
 from skimage.filters import try_all_threshold
 from skimage import measure 
-from brainio import brainio
-
 
 from visualize import visualize_obj
+from registration import get_registered_image
 
 
+def reorient_image(image, invert_axes=None, orientation="saggital"):
+    """
+    Reorients the image to the coordinate space of the atlas
+
+    :param image_path: str
+    :param threshold: float
+    :param invert_axes: tuple (Default value = None)
+    :param image: 
+    :param orientation:  (Default value = "saggital")
+
+    """
+    # TODO: move this to brainio
+    if invert_axes is not None:
+        for axis in list(invert_axes):
+            image = np.flip(image, axis=axis)
+
+    if orientation is not "saggital":
+        if orientation is "coronal":
+            transposition = (2, 1, 0)
+        elif orientation is "horizontal":
+            transposition = (1, 2, 0)
+
+        image = np.transpose(image, transposition)
+    return image
 
 def marching_cubes_to_obj(marching_cubes_out, output_file):
     """
@@ -37,10 +60,9 @@ def analyze(marching_cubes_out):
     # WIP
 
 
-
-
-def extract(datapath, objpath=False, voxel_size=1.0, render=False,
-                gaussian_kernel=2.5,
+def extract(datapath, control_point_filepath, objpath=False, voxel_size=10.0, 
+                render=False, invert_axes=(2), orientation="saggital",
+                gaussian_kernel=2,
                 threshold=99.99,
                 debug=False):
     """
@@ -66,16 +88,16 @@ def extract(datapath, objpath=False, voxel_size=1.0, render=False,
     if os.path.isfile(objpath) and not debug:
         print("Output file {} already exists. Skipping injection site extraction".format(objpath))
     else:
-        # Load downsampled data
+        # Load downsampled data registered to the atlas
+        data = get_registered_image(datapath, control_point_filepath)
+        data = reorient_image(data, invert_axes=[0,], orientation=orientation)
         print("Ready to extract injection site from: " + datapath)
-        data = brainio.load_any(datapath) # width, height, n images
-        print("     data loaded. Starting gaussian filtering")
+        print("     Starting gaussian filtering")
 
         # Gaussian filter 
-        datashape = data.shape
         kernel_shape = [gaussian_kernel, gaussian_kernel, 2]
         filtered = gaussian_filter(data, kernel_shape)
-        print("     filtering completed. Thresholding")
+        print("     Filtering completed. Thresholding")
 
         # treshold and binarize
         # try_all_threshold(filtered[:, :, 900])
@@ -86,7 +108,7 @@ def extract(datapath, objpath=False, voxel_size=1.0, render=False,
         binary = filtered > thresh
 
         # apply marching cubes 
-        print("     extracting surface from tresholded image")
+        print("     Extracting surface from tresholded image")
         verts, faces, normals, values = \
             measure.marching_cubes_lewiner(binary, 0, step_size=1)
 
@@ -104,7 +126,7 @@ def extract(datapath, objpath=False, voxel_size=1.0, render=False,
 
     # Visualize
     if render:
-        visualize_obj(objpath, alpha=.5)
+        return visualize_obj(objpath, alpha=.5)
 
 
 def get_parser():
@@ -115,6 +137,12 @@ def get_parser():
         dest="datapath",
         type=str,
         help="Path to brain volume (.nii) data",
+    )
+
+    parser.add_argument(
+        dest="control_point_filepath",
+        type=str,
+        help="Path to control point file",
     )
 
     parser.add_argument(
@@ -139,7 +167,7 @@ def get_parser():
         "--gaussian-kernel",
         dest="gaussian_kernel",
         type=int,
-        default=5,
+        default=2.5,
         help="Int, size of kernel for gaussian smooting (x,y directions).",
     )
     parser.add_argument(
