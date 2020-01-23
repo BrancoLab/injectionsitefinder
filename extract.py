@@ -2,11 +2,10 @@ import os
 import numpy as np 
 import argparse
 from skimage.filters import gaussian as gaussian_filter
-from skimage import measure
+from skimage import measure 
 from brainio import brainio
 
 
-from image import marching_cubes_to_obj
 from visualize import visualize_obj
 
 
@@ -30,6 +29,13 @@ def marching_cubes_to_obj(marching_cubes_out, output_file):
             f.write(f"f {item[0]}//{item[0]} {item[1]}//{item[1]} "
                     f"{item[2]}//{item[2]}\n")
         f.close()
+
+def analyze(marching_cubes_out):
+    verts, faces, normals, _ = marching_cubes_out
+    res = measure.mesh_surface_area(verts, faces)
+    a = 1
+
+
 
 
 def extract(datapath, objpath=False, voxel_size=1.0, render=False,
@@ -83,6 +89,10 @@ def extract(datapath, objpath=False, voxel_size=1.0, render=False,
         # Scale to atlas spacing
         if voxel_size is not 1:
             verts = verts * voxel_size
+
+        # Analyze
+        # analyze((verts, faces, normals, values))
+        # TODO make function to extract centroid and volume of mesh
 
         # Save image to .obj
         faces = faces + 1
