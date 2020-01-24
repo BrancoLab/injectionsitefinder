@@ -5,6 +5,7 @@ from brainio import brainio
 from brainrender.scene import Scene
 from brainrender.Utils.actors_funcs import edit_actor
 import matplotlib.pyplot as plt
+from vtkplotter.analysis import surfaceIntersection
 
 
 # ---------------------------------------------------------------------------- #
@@ -91,7 +92,8 @@ def outcome_visualizer(thresholded_nii, regfolder, other_channels=[]):
 
 def visualize_injections(injections, colors, regions=[], add_com=True,
                     regions_kwargs={}, com_kwargs={}, actor_kwargs={},
-                    edit_actor_kwargs={}, add_root=True):
+                    edit_actor_kwargs={}, add_root=True,
+                    intersect_regions=[]):
     """
         Renders a number of user provided .obj files with injection site 
         surface into a brainrender scene. Also provides opportunity to 
@@ -113,14 +115,25 @@ def visualize_injections(injections, colors, regions=[], add_com=True,
         scene.add_sphere_at_point(com, color=color, **kwargs)
 
     scene = Scene(add_root=add_root)
+    fakescene = Scene(add_root=add_root) # used to load meshes that should not be rendered
+
     for fl, c in zip(injections, colors): 
         act = scene.add_from_file(fl, c=c, **actor_kwargs)
         edit_actor(act, **edit_actor_kwargs)
 
         if add_com:
             add_CoM(act, scene, c, **com_kwargs)
+
+        if intersect_regions:
+            fakescene.add_brain_regions(intersect_regions)
+            for iregion in intersect_regions:
+                reg = fakescene.actors['regions'][iregion]
+                intersection = surfaceIntersection(act, reg)
+                scene.add_vtkactor(intersection)
+
     
     if regions:
         scene.add_brain_regions(regions, use_original_color=True, **regions_kwargs)
+        
 
     return scene 
