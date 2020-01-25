@@ -2,7 +2,7 @@ from vtkplotter import load, save
 from vtkplotter.analysis import extractLargestRegion
 
 
-from BrainRender.Utils.ABA.connectome import ABA
+from brainrender.Utils.ABA.connectome import ABA
 
 
 def get_center_of_mass(actor):

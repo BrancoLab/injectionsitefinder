@@ -3,22 +3,35 @@ sys.path.append("./")
 
 import os
 from extract import extract
-from visualize import visualize_nii
+from visualize import *
+from brainrender.colors import color_nicks
 
 import sys
-if sys.platform == "darwin":
-    test_fld = '/Users/federicoclaudi/Dropbox (UCL - SWC)/Rotation_vte/Anatomy/testbrain'
-else:
-    test_fld = 'Z:\\swc\\branco\\BrainSaw\\CC_134_2\\cellfinder\\registration'
+
+mouse_id = 'CC_134_1'
+regfolder = 'Z:\\swc\\branco\\BrainSaw\\{}\\cellfinder\\registration'.format(mouse_id)
+injfld = 'Z:\\swc\\branco\\BrainSaw\\injections'
+
+print("\n\n Starting Channel 0")
+ch = 'downsampled_channel_0.nii'
+datapath = os.path.join(regfolder, ch)
+outpath = os.path.join(injfld, mouse_id+'_ch0.obj')
+scene = extract(datapath, regfolder, objpath=outpath, debug=True, threshold=99.9)
+
+print("\n\n Starting Channel 1")
 ch = 'downsampled_channel_1.nii'
-datapath = os.path.join(test_fld, ch)
-
-scene = extract(datapath, test_fld, render=True, debug=True, threshold=99.9)
-scene.add_brain_regions(['SCm'], use_original_color=True, wireframe=1)
-scene.render()
+datapath = os.path.join(regfolder, ch)
+outpath = os.path.join(injfld, mouse_id+'_ch1.obj')
+scene = extract(datapath, regfolder, objpath=outpath, debug=True, threshold=99.9)
 
 
-# visualize_nii(r'Z:\swc\branco\BrainSaw\CC_134_1\cellfinder\registration\tresholded.nii',
-#         other_imgs=[r'Z:\swc\branco\BrainSaw\CC_134_1\cellfinder\registration\boundaries.nii',
-#                     r'Z:\swc\branco\BrainSaw\CC_134_1\cellfinder\registration\downsampled_channel_1.nii'])
+# scene.add_brain_regions(['SCm'], use_original_color=True, wireframe=1)
+# scene.render()
 
+
+
+# injfld = 'Z:\\swc\\branco\\BrainSaw\\injections'
+# files = [os.path.join(injfld, f) for f in os.listdir(injfld)]
+# colors = list(color_nicks.values())
+
+# visualize_injections(files, colors, regions=['SCs']).render()

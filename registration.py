@@ -42,7 +42,7 @@ def get_registered_image(nii_path, registration_dir):
 
     # get file paths
     basedir = os.path.split(nii_path)[0]
-    output_filename = os.path.join(basedir, 'transformed.nii')
+    output_filename = os.path.join(basedir, '{}_transformed.nii'.format(os.path.split(nii_path)[1].split(".")[0]))
     if os.path.isfile(output_filename):
         yn = input("Registred output exists already. Do you wish to run registration again?  [y,n]  ")
         if yn.lower() == "y":

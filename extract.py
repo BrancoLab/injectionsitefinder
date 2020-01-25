@@ -120,7 +120,7 @@ def extract(datapath, regfld, objpath=False, voxel_size=10.0,
             verts = verts * voxel_size
 
         # Save image to .obj
-        print("     Saving as .obj")
+        print("     Saving .obj at objpath")
         faces = faces + 1
         marching_cubes_to_obj((verts, faces, normals, values), objpath)
 
