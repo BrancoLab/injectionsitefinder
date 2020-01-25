@@ -35,7 +35,7 @@ def prepare_segmentation_cmd(
     return cmd
 
 
-def get_registered_image(nii_path, registration_dir):
+def get_registered_image(nii_path, registration_dir, debug):
     # get binaries
     nifty_reg_binaries_folder = source_files.get_niftyreg_binaries()
     program_path = get_binary(nifty_reg_binaries_folder, PROGRAM_NAME)
@@ -43,7 +43,7 @@ def get_registered_image(nii_path, registration_dir):
     # get file paths
     basedir = os.path.split(nii_path)[0]
     output_filename = os.path.join(basedir, '{}_transformed.nii'.format(os.path.split(nii_path)[1].split(".")[0]))
-    if os.path.isfile(output_filename):
+    if os.path.isfile(output_filename) and debug:
         yn = input("Registred output exists already. Do you wish to run registration again?  [y,n]  ")
         if yn.lower() == "y":
             run = True

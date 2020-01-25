@@ -65,7 +65,8 @@ def analyze(marching_cubes_out):
 def extract(datapath, regfld, objpath=False, voxel_size=10.0, 
                 render=False, 
                 gaussian_kernel=2,
-                threshold=99.99,
+                treshold_type='otsu',
+                treshold=99.99,
                 debug=False):
     """
         Extracts the location of injections from volumetric data.
@@ -81,7 +82,8 @@ def extract(datapath, regfld, objpath=False, voxel_size=10.0,
         :param voxel_size: float {optional, 1}.
         :param render: bool, default False. If true brainrender is used to render the injection site
         :param gaussian_kernel: float, size of the kernel used to filter the images.
-        :param threshold: float, range [0, 100] percentile to use for the treshold
+        :param treshold_type: str, either 'otsu' or 'perc' (percentile)
+        :param threshold: float, range [0, 100] percentile to use for the percentile treshold
         :param debug: bool, is true functionality useful for debugging is enabled.
     """
 
@@ -93,7 +95,7 @@ def extract(datapath, regfld, objpath=False, voxel_size=10.0,
         print("Output file {} already exists. Skipping injection site extraction".format(objpath))
     else:
         # Load downsampled data registered to the atlas
-        data = get_registered_image(datapath, regfld)
+        data = get_registered_image(datapath, regfld, debug)
         data = reorient_image(data, invert_axes=[2,], orientation='coronal')
         print("Ready to extract injection site from: " + datapath)
         print("     Starting gaussian filtering")
@@ -101,10 +103,14 @@ def extract(datapath, regfld, objpath=False, voxel_size=10.0,
         # Gaussian filter 
         kernel_shape = [gaussian_kernel, gaussian_kernel, 2]
         filtered = gaussian_filter(data, kernel_shape)
-        print("     Filtering completed. Thresholding")
+        print("     Filtering completed. Thresholding with {}".format(treshold_type))
 
-        # thresh = np.percentile(filtered.ravel(), threshold)
-        thresh = threshold_otsu(filtered)
+        if treshold_type.lower() == 'otsu':
+            thresh = threshold_otsu(filtered)
+        elif treshold_type.lower() == 'percentile':
+            thresh = np.percentile(filtered.ravel(), threshold)
+        else:
+            raise valueError("Unrecognised tresholding type: "+ treshold_type)
         binary = filtered > thresh
 
         if debug:
@@ -185,6 +191,15 @@ def get_parser():
         default=99.995,
         help="Float in range [0, 100]. The percentile number of pixel intensity values for tresholding",
     )
+
+    parser.add_argument(
+        "-tt",
+        "--treshold-type",
+        dest="treshold_type",
+        type=str,
+        default='otsu',
+        help="'otsu' or 'percentile'. Determines how the treshold value is computed",
+    )
     return parser
 
 
@@ -197,6 +212,7 @@ def main():
         render=args.render,
         gaussian_kernel=args.gaussian_kernel,
         treshold=args.treshold,
+        treshold_type=treshold_type,
     )
 
 

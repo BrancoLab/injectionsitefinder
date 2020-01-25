@@ -45,5 +45,5 @@ def get_largest_component(obj_filepath):
         selects the largest of these and discards the rest. 
     """
     actor = load(obj_filepath)
-    actor =  extractLargestRegion(actor).flipNormals()
+    actor = extractLargestRegion(actor).flipNormals()
     save(actor, obj_filepath)
