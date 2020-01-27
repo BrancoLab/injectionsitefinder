@@ -1,6 +1,9 @@
 .vscode/*
 /.vscode/*
 .vscode
+test.py
+vscode/*
+/vscode/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
