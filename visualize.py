@@ -82,11 +82,10 @@ def outcome_visualizer(thresholded_nii, regfolder, other_channels=[]):
         :param other_channels: list of strings with other .nii images to add to visualization
     """
     boundaries = [os.path.join(regfolder, f) for f in os.listdir(regfolder)\
-                    if 'boundaries.nii' in f]
+                    if 'boundaries.nii' in f][0]
     other_channels.append(boundaries)
 
     visualize_nii(thresholded_nii, other_imgs=other_channels )
-
 
 
 
@@ -137,3 +136,23 @@ def visualize_injections(injections, colors, regions=[], add_com=True,
         
 
     return scene 
+
+
+def render_experiment(injections, cells, injections_colors, cells_colors, regions=[], regions_kwargs={}):
+    if not isinstance(injections, list): injections = [injections]
+    if not isinstance(cells, list): cells = [cells]
+    if not isinstance(injections_colors, list): injections_colors = [injections_colors]
+    if not isinstance(cells_colors, list): cells_colors = [cells_colors]
+
+    scene = Scene()
+
+    for injection, color in zip(injections, injections_colors):
+        scene.add_from_file(injection, c=color)
+    
+    for cellfile, cellcolor in zip(cells, cells_colors):
+        scene.add_cells_from_file(cellfile, color=cellcolor, radius=10, alpha=.3)
+
+    if regions:
+        scene.add_brain_regions(regions, use_original_color=True, **regions_kwargs)
+
+    return scene

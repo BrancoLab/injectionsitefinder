@@ -22,7 +22,6 @@ def reorient_image(image, invert_axes=None, orientation="saggital"):
     :param orientation:  (Default value = "saggital")
 
     """
-    # TODO: move this to brainio
     if invert_axes is not None:
         for axis in list(invert_axes):
             image = np.flip(image, axis=axis)
@@ -64,60 +63,75 @@ def analyze(marching_cubes_out):
 
 def extract(datapath, regfld, objpath=False, voxel_size=10.0, 
                 render=False, 
+                transform=True, 
                 gaussian_kernel=2,
-                treshold_type='otsu',
-                treshold=99.99,
-                debug=False):
+                threshold_type='otsu',
+                threshold=99.99,
+                run_registration_anyway=False,
+                debug=True):
     """
         Extracts the location of injections from volumetric data.
         This is done by smoothing the the images with a gaussian filter,
-        then the image is tresholded and binarized. The treshold
+        then the image is thresholded and binarized. The threshold
         is defined as a user given percentile of the distribution of 
         pixel intensity values across the entire volume.
         The extracted injection site 3d shape is saved as a .obj file
 
         :param datapath: str with path to a downsampled.nii file
         :param regfld: str, path to cellfinder/registration
+        :param transform: bool, if false all operations are performed on the non transformed image
         :param objpath: str {optional}. Destination path to save the .obj file
         :param voxel_size: float {optional, 1}.
         :param render: bool, default False. If true brainrender is used to render the injection site
         :param gaussian_kernel: float, size of the kernel used to filter the images.
-        :param treshold_type: str, either 'otsu' or 'perc' (percentile)
-        :param threshold: float, range [0, 100] percentile to use for the percentile treshold
+        :param threshold_type: str, either 'otsu' or 'perc' (percentile)
+        :param threshold: float, range [0, 100] percentile to use for the percentile threshold
         :param debug: bool, is true functionality useful for debugging is enabled.
+        :param run_registration_anyway: bool, if true the registration step is run even if there is a xxx_transformed.nii already. 
     """
 
     # Check if output file exists
     if not objpath: 
         objpath = datapath.split(".")[0]+".obj"
 
+    if not transform:
+        objpath = objpath.split(".")[0]+"_not_transformed.obj"
+
     if os.path.isfile(objpath) and not debug:
         print("Output file {} already exists. Skipping injection site extraction".format(objpath))
     else:
         # Load downsampled data registered to the atlas
-        data = get_registered_image(datapath, regfld, debug)
-        data = reorient_image(data, invert_axes=[2,], orientation='coronal')
+        data = get_registered_image(datapath, regfld, debug, run_registration_anyway=run_registration_anyway)
+
+        if transform:
+            data = reorient_image(data, invert_axes=[2,], orientation='coronal')
+        else:
+            print("     analysing without applying the transform")
+
         print("Ready to extract injection site from: " + datapath)
         print("     Starting gaussian filtering")
 
         # Gaussian filter 
         kernel_shape = [gaussian_kernel, gaussian_kernel, 2]
         filtered = gaussian_filter(data, kernel_shape)
-        print("     Filtering completed. Thresholding with {}".format(treshold_type))
+        print("     Filtering completed. Thresholding with {}".format(threshold_type))
 
-        if treshold_type.lower() == 'otsu':
+        if threshold_type.lower() == 'otsu':
             thresh = threshold_otsu(filtered)
-        elif treshold_type.lower() == 'percentile':
+        elif threshold_type.lower() == 'percentile' or threshold_type.lower() == 'perc':
             thresh = np.percentile(filtered.ravel(), threshold)
         else:
-            raise valueError("Unrecognised tresholding type: "+ treshold_type)
+            raise valueError("Unrecognised thresholding type: "+ threshold_type)
         binary = filtered > thresh
 
         if debug:
-            brainio.to_nii(binary.astype(np.int16), os.path.join(os.path.split(datapath)[0], "tresholded.nii"))
+            if transform:
+                brainio.to_nii(binary.astype(np.int16), os.path.join(datapath.split(".")[0] + "_thresholded.nii"))
+            else:
+                brainio.to_nii(binary.astype(np.int16), os.path.join(datapath.split(".")[0] + "_thresholded_not_transformed.nii"))
 
         # apply marching cubes 
-        print("     Extracting surface from tresholded image")
+        print("     Extracting surface from thresholded image")
         verts, faces, normals, values = \
             measure.marching_cubes_lewiner(binary, 0, step_size=1)
 
@@ -126,7 +140,7 @@ def extract(datapath, regfld, objpath=False, voxel_size=10.0,
             verts = verts * voxel_size
 
         # Save image to .obj
-        print("     Saving .obj at objpath")
+        print("     Saving .obj at objpath\n\n")
         faces = faces + 1
         marching_cubes_to_obj((verts, faces, normals, values), objpath)
 
@@ -135,7 +149,6 @@ def extract(datapath, regfld, objpath=False, voxel_size=10.0,
 
     # Analyze
     props = analyse(objpath)
-    print(props)
 
     # Visualize
     if render:
@@ -185,8 +198,8 @@ def get_parser():
     )
     parser.add_argument(
         "-t",
-        "--treshold",
-        dest="treshold",
+        "--threshold",
+        dest="threshold",
         type=float,
         default=99.995,
         help="Float in range [0, 100]. The percentile number of pixel intensity values for tresholding",
@@ -195,10 +208,18 @@ def get_parser():
     parser.add_argument(
         "-tt",
         "--treshold-type",
-        dest="treshold_type",
+        dest="threshold_type",
         type=str,
         default='otsu',
-        help="'otsu' or 'percentile'. Determines how the treshold value is computed",
+        help="'otsu' or 'percentile'. Determines how the threshold value is computed",
+    )
+    parser.add_argument(
+        "-tr",
+        "--transform",
+        dest="transform",
+        type=str,
+        default='otsu',
+        help="'if false the data are not registered",
     )
     return parser
 
@@ -211,8 +232,9 @@ def main():
         objpath=args.objpath,
         render=args.render,
         gaussian_kernel=args.gaussian_kernel,
-        treshold=args.treshold,
-        treshold_type=treshold_type,
+        threshold=args.threshold,
+        threshold_type=args.threshold_type,
+        transform=args.transform,
     )
 
 

@@ -5,33 +5,22 @@ import os
 from extract import extract
 from visualize import *
 from brainrender.colors import color_nicks
-
+from brainrender.scene import Scene
 import sys
 
-mouse_id = 'CC_134_1'
-regfolder = 'Z:\\swc\\branco\\BrainSaw\\{}\\cellfinder\\registration'.format(mouse_id)
-injfld = 'Z:\\swc\\branco\\BrainSaw\\injections'
-
-print("\n\n Starting Channel 0")
-ch = 'downsampled_channel_0.nii'
-datapath = os.path.join(regfolder, ch)
-outpath = os.path.join(injfld, mouse_id+'_ch0.obj')
-scene = extract(datapath, regfolder, objpath=outpath, debug=True, threshold=99.9)
-
-print("\n\n Starting Channel 1")
-ch = 'downsampled_channel_1.nii'
-datapath = os.path.join(regfolder, ch)
-outpath = os.path.join(injfld, mouse_id+'_ch1.obj')
-scene = extract(datapath, regfolder, objpath=outpath, debug=True, threshold=99.9)
+# mice = ['CC_134_1', 'CC_134_2', 'AY_246_4', 'AY_254_2']
+# for mouse in mice:    
+#     rgf = 'Z:\\swc\\branco\\BrainSaw\\{}\\cellfinder\\registration'.format(mouse)
+#     data = os.path.join(rgf, 'downsampled_channel_1.nii')
+#     extract(data, rgf, threshold_type='percentile', threshold=99.96, transform=False)
+#     extract(data, rgf, threshold_type='percentile', threshold=99.96, transform=True)
 
 
-# scene.add_brain_regions(['SCm'], use_original_color=True, wireframe=1)
-# scene.render()
+mouse = "CC_134_2"
+reg_fld = 'Z:\\swc\\branco\\BrainSaw\\{}\\cellfinder\\registration'.format(mouse)
+tresh = os.path.join(reg_fld, 'downsampled_channel_1_thresholded_not_transformed.nii')
+d1 = os.path.join(reg_fld, 'downsampled_channel_1.nii')
+outcome_visualizer(tresh, reg_fld, other_channels=[d1])
 
 
 
-# injfld = 'Z:\\swc\\branco\\BrainSaw\\injections'
-# files = [os.path.join(injfld, f) for f in os.listdir(injfld)]
-# colors = list(color_nicks.values())
-
-# visualize_injections(files, colors, regions=['SCs']).render()
