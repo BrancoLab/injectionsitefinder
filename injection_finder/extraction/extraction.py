@@ -3,11 +3,14 @@ import numpy as np
 
 from skimage.filters import gaussian as gaussian_filter
 from skimage.filters import threshold_otsu
+from skimage import measure
 
-from registration import get_registered_image
-from analyse import get_largest_component
-from utils import reorient_image, marching_cubes_to_obj
-from parsers import extraction_parser
+from brainio import brainio
+
+from .registration import get_registered_image
+from .analyse import get_largest_component
+from .utils import reorient_image, marching_cubes_to_obj
+from .parsers import extraction_parser
 
 # For logging
 import logging
@@ -24,6 +27,7 @@ class Extractor:
                 percentile_threshold=99.95,
                 threshold_type='otsu',
                 obj_path=None,
+                overwrite_registration=False,
                 ):
 
         """
@@ -39,6 +43,7 @@ class Extractor:
             :param percentile_threshold: float, in range [0, 1] percentile to use for thresholding
             :param threshold_type: str, either ['otsu', 'percentile'], type of threshold used
             :param obj_path: path to .obj file destination. 
+            :param overwrite_registration: if false doesn't overwrite the registration step
         """
 
         # Get arguments
@@ -50,6 +55,7 @@ class Extractor:
         self.percentile_threshold = percentile_threshold
         self.threshold_type = threshold_type
         self.obj_path = obj_path
+        self.overwrite_registration = overwrite_registration
 
         # Run first with the image oriented for brainrender
         image = self.setup()
@@ -58,7 +64,8 @@ class Extractor:
     def setup(self):
         if not os.path.isfile(self.img_filepath):
             raise FileNotFoundError("The image path {} is not valid".format(self.img_filepath))
-        self.self.thresholded_savepath = self.img_filepath.split(".")[0]+"_thresholded.nii"
+
+        self.thresholded_savepath = self.img_filepath.split(".")[0]+"_thresholded.nii"
 
         # Get path to obj file and check if it existsts
         if self.obj_path is None:
@@ -69,16 +76,16 @@ class Extractor:
                         Analysis will not run as overwrite is set disabled".format(self.obj_path))
 
         # Load image and register
-        image = get_registered_image(self.img_filepath, self.registration_folder, overwrite=self.overwrite)
+        image = get_registered_image(self.img_filepath, self.registration_folder, self.logging, overwrite=self.overwrite_registration)
         return image
 
 
-    def extract(image, gaussian_kernel):
+    def extract(self, image):
         self.logging.info("Processing "+ self.img_filepath)
-        self.logging.info("Gaussian filtering with kernel size: {}".format(gaussian_kernel))
+        self.logging.info("Gaussian filtering with kernel size: {}".format(self.gaussian_kernel))
 
         # Gaussian filter 
-        kernel_shape = [gaussian_kernel, gaussian_kernel, 2]
+        kernel_shape = [self.gaussian_kernel, self.gaussian_kernel, 2]
         filtered = gaussian_filter(image, kernel_shape)
         self.logging.info("Filtering completed")
 
@@ -90,12 +97,12 @@ class Extractor:
         elif self.threshold_type.lower() == 'percentile' or self.threshold_type.lower() == 'perc':
             thresh = np.percentile(filtered.ravel(), self.percentile_threshold)
             self.logging.info("Thresholding with {} threshold type. {}th percentile [{}]".format(\
-                            self.threshold_type, threshold, thresh))
+                            self.threshold_type, self.percentile_threshold, thresh))
         else:
             raise valueError("Unrecognised thresholding type: "+ self.threshold_type)
 
         binary = filtered > thresh
-        oriented_binary = reorient_image(data, invert_axes=[2,], orientation='coronal')
+        oriented_binary = reorient_image(binary, invert_axes=[2,], orientation='coronal')
 
         # Save thresholded image
         if not os.path.isfile(self.thresholded_savepath) or self.overwrite:
@@ -112,7 +119,7 @@ class Extractor:
             verts = verts * voxel_size
 
         # Save image to .obj
-        self.logging.info(" Saving .obj at objpath")
+        self.logging.info(" Saving .obj at {}".format(self.obj_path))
         faces = faces + 1
         marching_cubes_to_obj((verts, faces, normals, values), self.objpath)
 
@@ -133,8 +140,7 @@ def main():
         outdir = args.output_directory
 
     # Start log
-    fancylog.start_logging(
-        outdir, verbose=True)
+    fancylog.start_logging(outdir, package, verbose=True)
 
     # Start extraction
     Extractor(
@@ -146,4 +152,5 @@ def main():
             percentile_threshold=args.percentile_threshold,
             threshold_type=args.threshold_type,
             obj_path=args.obj_path,
+            overwrite_registration=args.overwrite_registration,
     )

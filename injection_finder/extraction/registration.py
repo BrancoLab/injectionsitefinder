@@ -35,7 +35,7 @@ def prepare_segmentation_cmd(
     return cmd
 
 
-def get_registered_image(nii_path, registration_dir, debug, run_registration_anyway=False):
+def get_registered_image(nii_path, registration_dir, logging, overwrite=False):
     # get binaries
     nifty_reg_binaries_folder = source_files.get_niftyreg_binaries()
     program_path = get_binary(nifty_reg_binaries_folder, PROGRAM_NAME)
@@ -43,11 +43,8 @@ def get_registered_image(nii_path, registration_dir, debug, run_registration_any
     # get file paths
     basedir = os.path.split(nii_path)[0]
     output_filename = os.path.join(basedir, '{}_transformed.nii'.format(os.path.split(nii_path)[1].split(".")[0]))
-    if os.path.isfile(output_filename):
-        if run_registration_anyway:
-            run = True
-        else:
-            run = False
+    if os.path.isfile(output_filename) and not overwrite:
+        run = False
     else:
         run = True
     
@@ -65,12 +62,12 @@ def get_registered_image(nii_path, registration_dir, debug, run_registration_any
             destination_image,
             control_point_file,
         )
-        print("Running registration")
+        logging.info("Running registration")
         try:
             safe_execute_command(reg_cmd, log_file_path, error_file_path)
         except SafeExecuteCommandError as err:
             raise RegistrationError("Registration failed; {}".format(err))
     else:
-        print('Skipping registration as output file already exists')
+        logging.info('Skipping registration as output file already exists')
 
     return brainio.load_any(output_filename)

@@ -52,4 +52,13 @@ def extraction_parser():
         default='otsu',
         help="'otsu' or 'percentile'. Determines how the threshold value is computed",
     )
+
+    parser.add_argument(
+        "-or",
+        "--overwrite-registration",
+        dest="overwrite_registration",
+        type=str,
+        default='otsu',
+        help="If false skip running again the registration",
+    )
     return parser
