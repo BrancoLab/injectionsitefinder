@@ -18,7 +18,6 @@ DEFAULT_OUTPUT_FILE_NAME = "roi_transformed.nii"
 DEFAULT_TEMP_FILE_NAME = "ROI_TMP.nii"
 default_atlas_name = "brain_filtered.nii"
 
-# TODO this should be integrated in celllfinder ?
 def prepare_segmentation_cmd(
     program_path,
     floating_image_path,

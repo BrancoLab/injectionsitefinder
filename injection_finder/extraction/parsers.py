@@ -58,7 +58,7 @@ def extraction_parser():
         "--overwrite-registration",
         dest="overwrite_registration",
         type=str,
-        default='otsu',
+        default='False',
         help="If false skip running again the registration",
     )
     return parser
