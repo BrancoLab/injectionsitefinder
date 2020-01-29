@@ -5,9 +5,12 @@ import logging
 from fancylog import fancylog
 import fancylog as package
 
-mouse='CC_134_1'    
+mouse='AY_254_2'    
+channel='1'
 rgf = 'Z:\\swc\\branco\\BrainSaw\\{}\\cellfinder\\registration'.format(mouse)
-data = os.path.join(rgf, 'downsampled_channel_1.nii')
+data = os.path.join(rgf, 'downsampled_channel_{}.nii'.format(channel))
+out_fld = 'Z:\\swc\\branco\\BrainSaw\\injections'
+out_path = os.path.join(out_fld, mouse+'_ch{}inj.obj'.format(channel))
 
 
 fancylog.start_logging(
@@ -21,4 +24,5 @@ Extractor(
         overwrite=True,
         percentile_threshold=99.95,
         threshold_type='perc',
+        obj_path=out_path,
 )

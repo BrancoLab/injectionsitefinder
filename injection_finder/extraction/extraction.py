@@ -80,12 +80,12 @@ class Extractor:
         return image
 
 
-    def extract(self, image):
+    def extract(self, image, voxel_size=10):
         self.logging.info("Processing "+ self.img_filepath)
         self.logging.info("Gaussian filtering with kernel size: {}".format(self.gaussian_kernel))
 
         # Gaussian filter 
-        kernel_shape = [self.gaussian_kernel, self.gaussian_kernel, 2]
+        kernel_shape = [self.gaussian_kernel, self.gaussian_kernel, 3]
         filtered = gaussian_filter(image, kernel_shape)
         self.logging.info("Filtering completed")
 
@@ -121,10 +121,10 @@ class Extractor:
         # Save image to .obj
         self.logging.info(" Saving .obj at {}".format(self.obj_path))
         faces = faces + 1
-        marching_cubes_to_obj((verts, faces, normals, values), self.objpath)
+        marching_cubes_to_obj((verts, faces, normals, values), self.obj_path)
 
         # Keep only the largest connected component
-        get_largest_component(self.objpath)
+        get_largest_component(self.obj_path)
 
 
 
