@@ -18,6 +18,24 @@ def extraction_parser():
     )
 
     parser.add_argument(
+        "-od",
+        "--output-directory",
+        dest="output_directory",
+        type=str,
+        default=None,
+        help="Path to directory where the log will be saved.",
+    )
+
+    parser.add_argument(
+        "-ow",
+        "--overwrite",
+        dest="overwrite",
+        type=bool,
+        default=True,
+        help="If false files will not be overwritten.",
+    )
+    
+    parser.add_argument(
         "-o",
         "--obj-path",
         dest="obj_path",

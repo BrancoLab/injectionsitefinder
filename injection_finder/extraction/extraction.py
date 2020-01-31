@@ -7,10 +7,10 @@ from skimage import measure
 
 from brainio import brainio
 
-from .registration import get_registered_image
-from .analyse import get_largest_component
-from .utils import reorient_image, marching_cubes_to_obj
-from .parsers import extraction_parser
+from registration import get_registered_image
+from analyse import get_largest_component
+from utils import reorient_image, marching_cubes_to_obj
+from parsers import extraction_parser
 
 # For logging
 import logging
@@ -140,7 +140,8 @@ def main():
         outdir = args.output_directory
 
     # Start log
-    fancylog.start_logging(outdir, package, verbose=True)
+    log_name = 'injection_finder_{}'.format(os.path.split(args.registration_folder)[-1])
+    fancylog.start_logging(outdir, package, filename=log_name, verbose=True)
 
     # Start extraction
     Extractor(
@@ -154,3 +155,6 @@ def main():
             obj_path=args.obj_path,
             overwrite_registration=args.overwrite_registration,
     )
+
+if __name__ == '__main__':
+    main()
