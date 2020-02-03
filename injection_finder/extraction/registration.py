@@ -18,12 +18,14 @@ DEFAULT_OUTPUT_FILE_NAME = "roi_transformed.nii"
 DEFAULT_TEMP_FILE_NAME = "ROI_TMP.nii"
 default_atlas_name = "brain_filtered.nii"
 
+
 def prepare_segmentation_cmd(
     program_path,
     floating_image_path,
     output_file_name,
     destination_image_filename,
-    control_point_file,):
+    control_point_file,
+):
     cmd = "{} -cpp {} -flo {} -ref {} -res {}".format(
         program_path,
         control_point_file,
@@ -41,18 +43,23 @@ def get_registered_image(nii_path, registration_dir, logging, overwrite=False):
 
     # get file paths
     basedir = os.path.split(nii_path)[0]
-    output_filename = os.path.join(basedir, '{}_transformed.nii'.format(os.path.split(nii_path)[1].split(".")[0]))
+    output_filename = os.path.join(
+        basedir,
+        "{}_transformed.nii".format(os.path.split(nii_path)[1].split(".")[0]),
+    )
     if os.path.isfile(output_filename) and not overwrite:
         run = False
     else:
         run = True
-    
+
     if run:
         destination_image = os.path.join(registration_dir, default_atlas_name)
-        control_point_file = os.path.join(registration_dir, DEFAULT_CONTROL_POINT_FILE)
-        
-        log_file_path = os.path.join(basedir,'registration_log.txt')
-        error_file_path = os.path.join(basedir, 'registration_err.txt')
+        control_point_file = os.path.join(
+            registration_dir, DEFAULT_CONTROL_POINT_FILE
+        )
+
+        log_file_path = os.path.join(basedir, "registration_log.txt")
+        error_file_path = os.path.join(basedir, "registration_err.txt")
 
         reg_cmd = prepare_segmentation_cmd(
             program_path,
@@ -67,6 +74,6 @@ def get_registered_image(nii_path, registration_dir, logging, overwrite=False):
         except SafeExecuteCommandError as err:
             raise RegistrationError("Registration failed; {}".format(err))
     else:
-        logging.info('Skipping registration as output file already exists')
+        logging.info("Skipping registration as output file already exists")
 
     return brainio.load_any(output_filename)

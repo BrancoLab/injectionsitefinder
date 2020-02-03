@@ -1,5 +1,5 @@
 import os
-import numpy as np 
+import numpy as np
 
 from skimage.filters import gaussian as gaussian_filter
 from skimage.filters import threshold_otsu
@@ -17,18 +17,20 @@ import logging
 from fancylog import fancylog
 import fancylog as package
 
+
 class Extractor:
-    def __init__(self, 
-                img_filepath, 
-                registration_folder, 
-                logging, 
-                overwrite=False,
-                gaussian_kernel=2,
-                percentile_threshold=99.95,
-                threshold_type='otsu',
-                obj_path=None,
-                overwrite_registration=False,
-                ):
+    def __init__(
+        self,
+        img_filepath,
+        registration_folder,
+        logging,
+        overwrite=False,
+        gaussian_kernel=2,
+        percentile_threshold=99.95,
+        threshold_type="otsu",
+        obj_path=None,
+        overwrite_registration=False,
+    ):
 
         """
             Extractor processes a downsampled.nii image to extract the location of the injection site.
@@ -63,56 +65,91 @@ class Extractor:
 
     def setup(self):
         if not os.path.isfile(self.img_filepath):
-            raise FileNotFoundError("The image path {} is not valid".format(self.img_filepath))
+            raise FileNotFoundError(
+                "The image path {} is not valid".format(self.img_filepath)
+            )
 
-        self.thresholded_savepath = self.img_filepath.split(".")[0]+"_thresholded.nii"
+        self.thresholded_savepath = (
+            self.img_filepath.split(".")[0] + "_thresholded.nii"
+        )
 
         # Get path to obj file and check if it existsts
         if self.obj_path is None:
-            self.obj_path = self.img_filepath.split(".")[0]+".obj"
-        
+            self.obj_path = self.img_filepath.split(".")[0] + ".obj"
+
         if os.path.isfile(self.obj_path) and not self.overwrite:
-            self.logging.warning("A file exists already at {}. \
-                        Analysis will not run as overwrite is set disabled".format(self.obj_path))
+            self.logging.warning(
+                "A file exists already at {}. \
+                        Analysis will not run as overwrite is set disabled".format(
+                    self.obj_path
+                )
+            )
 
         # Load image and register
-        image = get_registered_image(self.img_filepath, self.registration_folder, self.logging, overwrite=self.overwrite_registration)
+        image = get_registered_image(
+            self.img_filepath,
+            self.registration_folder,
+            self.logging,
+            overwrite=self.overwrite_registration,
+        )
         return image
 
-
     def extract(self, image, voxel_size=10):
-        self.logging.info("Processing "+ self.img_filepath)
-        self.logging.info("Gaussian filtering with kernel size: {}".format(self.gaussian_kernel))
+        self.logging.info("Processing " + self.img_filepath)
+        self.logging.info(
+            "Gaussian filtering with kernel size: {}".format(
+                self.gaussian_kernel
+            )
+        )
 
-        # Gaussian filter 
+        # Gaussian filter
         kernel_shape = [self.gaussian_kernel, self.gaussian_kernel, 6]
         filtered = gaussian_filter(image, kernel_shape)
         self.logging.info("Filtering completed")
 
         # Thresholding
-        if self.threshold_type.lower() == 'otsu':
+        if self.threshold_type.lower() == "otsu":
             thresh = threshold_otsu(filtered)
-            self.logging.info("Thresholding with {} threshold type".format(self.threshold_type))
+            self.logging.info(
+                "Thresholding with {} threshold type".format(
+                    self.threshold_type
+                )
+            )
 
-        elif self.threshold_type.lower() == 'percentile' or self.threshold_type.lower() == 'perc':
+        elif (
+            self.threshold_type.lower() == "percentile"
+            or self.threshold_type.lower() == "perc"
+        ):
             thresh = np.percentile(filtered.ravel(), self.percentile_threshold)
-            self.logging.info("Thresholding with {} threshold type. {}th percentile [{}]".format(\
-                            self.threshold_type, self.percentile_threshold, thresh))
+            self.logging.info(
+                "Thresholding with {} threshold type. {}th percentile [{}]".format(
+                    self.threshold_type, self.percentile_threshold, thresh
+                )
+            )
         else:
-            raise valueError("Unrecognised thresholding type: "+ self.threshold_type)
+            raise valueError(
+                "Unrecognised thresholding type: " + self.threshold_type
+            )
 
         binary = filtered > thresh
-        oriented_binary = reorient_image(binary, invert_axes=[2,], orientation='coronal')
+        oriented_binary = reorient_image(
+            binary, invert_axes=[2,], orientation="coronal"
+        )
 
         # Save thresholded image
         if not os.path.isfile(self.thresholded_savepath) or self.overwrite:
-            self.logging.info("Saving thresholded image to {}".format(self.thresholded_savepath))
+            self.logging.info(
+                "Saving thresholded image to {}".format(
+                    self.thresholded_savepath
+                )
+            )
             brainio.to_nii(binary.astype(np.int16), self.thresholded_savepath)
 
-        # apply marching cubes 
+        # apply marching cubes
         self.logging.info("Extracting surface from thresholded image")
-        verts, faces, normals, values = \
-            measure.marching_cubes_lewiner(oriented_binary, 0, step_size=1)
+        verts, faces, normals, values = measure.marching_cubes_lewiner(
+            oriented_binary, 0, step_size=1
+        )
 
         # Scale to atlas spacing
         if voxel_size is not 1:
@@ -127,10 +164,9 @@ class Extractor:
         get_largest_component(self.obj_path)
 
 
-
 def main():
     args = extraction_parser().parse_args()
-    
+
     # Get output directory
     if args.output_directory is None:
         outdir = os.get_cwd()
@@ -140,21 +176,24 @@ def main():
         outdir = args.output_directory
 
     # Start log
-    log_name = 'injection_finder_{}'.format(os.path.split(args.registration_folder)[-1])
+    log_name = "injection_finder_{}".format(
+        os.path.split(args.registration_folder)[-1]
+    )
     fancylog.start_logging(outdir, package, filename=log_name, verbose=True)
 
     # Start extraction
     Extractor(
-            args.img_filepath, 
-            args.registration_folder, 
-            logging, 
-            overwrite=args.overwrite,
-            gaussian_kernel=args.gaussian_kernel,
-            percentile_threshold=args.percentile_threshold,
-            threshold_type=args.threshold_type,
-            obj_path=args.obj_path,
-            overwrite_registration=args.overwrite_registration,
+        args.img_filepath,
+        args.registration_folder,
+        logging,
+        overwrite=args.overwrite,
+        gaussian_kernel=args.gaussian_kernel,
+        percentile_threshold=args.percentile_threshold,
+        threshold_type=args.threshold_type,
+        obj_path=args.obj_path,
+        overwrite_registration=args.overwrite_registration,
     )
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

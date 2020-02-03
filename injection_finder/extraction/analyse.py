@@ -11,6 +11,7 @@ def get_center_of_mass(actor):
     """
     return actor.centerOfMass()
 
+
 def get_volume(actor):
     """
         Get the volume of a vtk actor
@@ -30,14 +31,17 @@ def analyse(obj_filepath):
 
     # Get stats
     props = {}
-    props['center_of_mass'] = get_center_of_mass(actor)
-    props['volume'] = get_volume(actor)
+    props["center_of_mass"] = get_center_of_mass(actor)
+    props["volume"] = get_volume(actor)
 
     # Get brain region of CoM and of other points on the outher surface
     aba = ABA()
-    props['com_region'] = aba.get_structure_from_coordinates(get_center_of_mass(actor))['acronym']
+    props["com_region"] = aba.get_structure_from_coordinates(
+        get_center_of_mass(actor)
+    )["acronym"]
 
     return props
+
 
 def get_largest_component(obj_filepath):
     """

@@ -6,9 +6,7 @@ def extraction_parser():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument(
-        dest="img_filepath",
-        type=str,
-        help="Path to brain volume (.nii) data",
+        dest="img_filepath", type=str, help="Path to brain volume (.nii) data",
     )
 
     parser.add_argument(
@@ -34,7 +32,7 @@ def extraction_parser():
         default=True,
         help="If false files will not be overwritten.",
     )
-    
+
     parser.add_argument(
         "-o",
         "--obj-path",
@@ -67,7 +65,7 @@ def extraction_parser():
         "--treshold-type",
         dest="threshold_type",
         type=str,
-        default='otsu',
+        default="otsu",
         help="'otsu' or 'percentile'. Determines how the threshold value is computed",
     )
 
@@ -76,7 +74,7 @@ def extraction_parser():
         "--overwrite-registration",
         dest="overwrite_registration",
         type=str,
-        default='False',
+        default="False",
         help="If false skip running again the registration",
     )
     return parser
