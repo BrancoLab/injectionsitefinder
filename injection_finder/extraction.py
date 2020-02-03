@@ -8,8 +8,7 @@ from skimage import measure
 from brainio import brainio
 
 from registration import get_registered_image
-from analyse import get_largest_component
-from utils import reorient_image, marching_cubes_to_obj
+from utils import reorient_image, marching_cubes_to_obj, get_largest_component
 from parsers import extraction_parser
 
 # For logging

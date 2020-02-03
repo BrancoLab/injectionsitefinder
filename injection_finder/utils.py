@@ -1,4 +1,5 @@
 import numpy as np
+from vtkplotter.analysis import extractLargestRegion
 
 # ----------------------- IMAGE MANIPULATION FUNCTIONS ----------------------- #
 def reorient_image(image, invert_axes=None, orientation="saggital"):
@@ -48,3 +49,20 @@ def marching_cubes_to_obj(marching_cubes_out, output_file):
                 f"{item[2]}//{item[2]}\n"
             )
         f.close()
+
+
+# ----------------------------- VTKPLOTTER UTILS ----------------------------- #
+def get_center_of_mass(actor):
+    """
+        Get the center of mass of a vtk actor
+    """
+    return actor.centerOfMass()
+
+def get_largest_component(obj_filepath):
+    """
+        Given a .obj file with multiple disconnected meshes in it, it
+        selects the largest of these and discards the rest. 
+    """
+    actor = load(obj_filepath)
+    actor = extractLargestRegion(actor).flipNormals()
+    save(actor, obj_filepath)
